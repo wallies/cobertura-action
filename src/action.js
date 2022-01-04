@@ -86,15 +86,26 @@ async function action(payload) {
     reportTitle = `Coverage: ${_actual}% (actual) ${_sign} ${minimumCoverage}% (expected)`;
   }
   if (pullRequestNumber && pullRequestComment) {
-    await addComment(pullRequestNumber, comment, reportName);
+    try {
+      await addComment(pullRequestNumber, comment, reportName);
+    } catch (error) {
+      core.error(`❌ Failed to add pull request comment. (${error})`);
+    }
   }
-  await addCheck(
-    checkName,
-    checkBody,
-    reportTitle,
-    commit,
-    failBelowThreshold ? (belowThreshold ? "failure" : "success") : "neutral"
-  );
+
+  try {
+    await addCheck(
+      checkName,
+      checkBody,
+      reportTitle,
+      commit,
+      failBelowThreshold ? (belowThreshold ? "failure" : "success") : "neutral"
+    );
+  } catch (error) {
+    core.error(
+      `❌ Failed to create checks using the provided token. (${error})`
+    );
+  }
 
   if (failBelowThreshold && belowThreshold) {
     core.setFailed("Minimum coverage requirement was not satisfied");
