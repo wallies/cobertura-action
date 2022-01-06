@@ -18350,10 +18350,10 @@ function markdownReport(reports, commit, options) {
       }
       // add file details as row
       files.push([
-        escapeMarkdown(showClassNames ? file.name : fileName),
-        `\`${fileTotal}%\``,
-        showLine ? `\`${fileLines}%\`` : undefined,
-        showBranch ? `\`${fileBranch}%\`` : undefined,
+        showClassNames ? file.name : fileName,
+        `<code>${fileTotal}%</code>`,
+        showLine ? `<code>${fileLines}%</code>` : undefined,
+        showBranch ? `<code>${fileBranch}%</code>` : undefined,
         status(fileTotal),
         showMissing && file.missing
           ? formatMissingLines(
@@ -18390,10 +18390,10 @@ function markdownReport(reports, commit, options) {
         showMissing ? "Missing" : undefined,
       ],
       [
-        "**All files**",
-        `\`${total}%\``,
-        showLine ? `\`${linesTotal}%\`` : undefined,
-        showBranch ? `\`${branchTotal}%\`` : undefined,
+        "<strong>All files</strong>",
+        `<code>${total}%</code>`,
+        showLine ? `<code>${linesTotal}%</code>` : undefined,
+        showBranch ? `<code>${branchTotal}%</code>` : undefined,
         status(total),
         showMissing ? " " : undefined,
       ],
