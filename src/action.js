@@ -246,7 +246,7 @@ function markdownReport(reports, commit, options) {
       })
       .join("\n");
     const titleText = `<strong>${reportName}${folder}</strong>`;
-    output += `${titleText}\n\n<table>\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
+    output += `${titleText}\n\n<table style="margin-top:2em;">\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
