@@ -18380,7 +18380,7 @@ function markdownReport(reports, commit, options) {
     const total = Math.floor(report.total);
     const linesTotal = Math.floor(report.line);
     const branchTotal = Math.floor(report.branch);
-    const table = `<table style="margin-top:2em;">\n<tbody>\n${[
+    const table = `<br/>\n<table>\n<tbody>\n${[
       [
         "File",
         "Coverage",
@@ -18407,7 +18407,7 @@ function markdownReport(reports, commit, options) {
             // file detail row
             : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
           // folder name row
-          : `</tbody>\n<tbody>\n<tr><td colspan="10" style="border:none;margin-top:2em;">${row}</td></tr>\n</tbody>\n<tbody>`;
+          : `</tbody>\n<tbody>\n<tr><td colspan="10"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n")}\n</tbody>\n<table>`;
     const titleText = `<strong>${reportName}${folder} - ${total}%</strong>`;
