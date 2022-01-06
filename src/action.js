@@ -255,7 +255,7 @@ function markdownReport(reports, commit, options) {
           // folder name row
           : `</tbody>\n<tbody>\n<tr><td colspan="10"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
       })
-      .join("\n")}\n</tbody>\n<table>`;
+      .join("\n")}\n</tbody>\n</table>`;
     const titleText = `<strong>${reportName}${folder} - ${total}%</strong>`;
     output += `${titleText}\n\n${table}\n\n`;
     structuredOutput += `<details><summary>${titleText}</summary>\n\n${table}\n\n</details>\n\n`;
