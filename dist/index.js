@@ -18256,7 +18256,7 @@ function formatRangeText([start, end]) {
 }
 
 function tickWrap(string) {
-  return "`" + string + "`";
+  return `<code style="white-space: nowrap;">${string}</code>`;
 }
 
 function cropRangeList(separator, showMissingMaxLength, ranges) {
@@ -18322,14 +18322,24 @@ function markdownReport(reports, commit, options) {
   let output = "";
   for (const report of reports) {
     const folder = reports.length <= 1 ? "" : ` ${report.folder}`;
+    let previousFileFolder;
     for (const file of report.files.filter(
       (file) => filteredFiles == null || filteredFiles.includes(file.filename)
     )) {
       const fileTotal = Math.floor(file.total);
       const fileLines = Math.floor(file.line);
       const fileBranch = Math.floor(file.branch);
+      const fileNameParts = file.filename.split('/');
+      const fileName = fileNameParts.pop();
+      const fileFolder = fileNameParts.join('/');
+      // add unique folder names as rows
+      if (!showClassNames && (fileFolder !== previousFileFolder)) {
+        files.push(fileFolder);
+        previousFileFolder = fileFolder;
+      }
+      // add file details as row
       files.push([
-        escapeMarkdown(showClassNames ? file.name : file.filename),
+        escapeMarkdown(showClassNames ? file.name : fileName),
         `\`${fileTotal}%\``,
         showLine ? `\`${fileLines}%\`` : undefined,
         showBranch ? `\`${fileBranch}%\`` : undefined,
@@ -18369,14 +18379,6 @@ function markdownReport(reports, commit, options) {
         showMissing ? "Missing" : undefined,
       ],
       [
-        "-",
-        ":-:",
-        showLine ? ":-:" : undefined,
-        showBranch ? ":-:" : undefined,
-        ":-:",
-        showMissing ? ":-:" : undefined,
-      ],
-      [
         "**All files**",
         `\`${total}%\``,
         showLine ? `\`${linesTotal}%\`` : undefined,
@@ -18386,12 +18388,19 @@ function markdownReport(reports, commit, options) {
       ],
       ...files,
     ]
-      .map((row) => {
-        return `| ${row.filter(Boolean).join(" | ")} |`;
+      .map((row, index) => {
+        return Array.isArray(row)
+          ? index === 0
+            // heading row
+            ? `<tr><th>${row.filter(Boolean).join('</th><th>')}</th></tr>`
+            // file detail row
+            : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
+          // folder name row
+          : `</tbody>\n<tbody>\n<tr><td colspan="10" style="border:none;margin-top:2em;">${row}</td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n");
     const titleText = `<strong>${reportName}${folder}</strong>`;
-    output += `${titleText}\n\n${table}\n\n`;
+    output += `${titleText}\n\n<table style="margin-top:2em;">\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
