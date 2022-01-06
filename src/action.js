@@ -49,14 +49,17 @@ async function action(payload) {
   const onlyChangedFiles = JSON.parse(
     core.getInput("only_changed_files", { required: true })
   );
-  const reportName = core.getInput("report_name", { required: false });
+  const reportName =
+    core.getInput("report_name", { required: false }) || "Coverage Report";
+  const checkName =
+    core.getInput("check_name", { required: false }) || "coverage";
 
   const changedFiles = onlyChangedFiles
     ? await listChangedFiles(pullRequestNumber)
     : null;
 
   const reports = await processCoverage(path, { skipCovered });
-  const comment = markdownReport(reports, commit, {
+  const [checkBody, comment] = markdownReport(reports, commit, {
     minimumCoverage,
     showLine,
     showBranch,
@@ -72,13 +75,20 @@ async function action(payload) {
   const belowThreshold = reports.some(
     (report) => Math.floor(report.total) < minimumCoverage
   );
-
+  let reportTitle = reportName;
+  // TODO: Figure out a good title for more than one report
+  if (reports.length === 1) {
+    const _sign = belowThreshold ? "<" : ">=";
+    const _actual = Math.floor(reports[0].total);
+    reportTitle = `Coverage: ${_actual}% (actual) ${_sign} ${minimumCoverage}% (expected)`;
+  }
   if (pullRequestNumber) {
     await addComment(pullRequestNumber, comment, reportName);
   }
   await addCheck(
-    comment,
-    reportName,
+    checkName,
+    checkBody,
+    reportTitle,
     commit,
     failBelowThreshold ? (belowThreshold ? "failure" : "success") : "neutral"
   );
@@ -166,6 +176,7 @@ function markdownReport(reports, commit, options) {
   // Setup files
   const files = [];
   let output = "";
+  let structuredOutput = "";
   for (const report of reports) {
     const folder = reports.length <= 1 ? "" : ` ${report.folder}`;
     let previousFileFolder;
@@ -185,10 +196,10 @@ function markdownReport(reports, commit, options) {
       }
       // add file details as row
       files.push([
-        escapeMarkdown(showClassNames ? file.name : fileName),
-        `\`${fileTotal}%\``,
-        showLine ? `\`${fileLines}%\`` : undefined,
-        showBranch ? `\`${fileBranch}%\`` : undefined,
+        showClassNames ? file.name : fileName,
+        `<code>${fileTotal}%</code>`,
+        showLine ? `<code>${fileLines}%</code>` : undefined,
+        showBranch ? `<code>${fileBranch}%</code>` : undefined,
         status(fileTotal),
         showMissing && file.missing
           ? formatMissingLines(
@@ -215,7 +226,7 @@ function markdownReport(reports, commit, options) {
     const total = Math.floor(report.total);
     const linesTotal = Math.floor(report.line);
     const branchTotal = Math.floor(report.branch);
-    const table = [
+    const table = `<br/>\n<table>\n<tbody>\n${[
       [
         "File",
         "Coverage",
@@ -225,10 +236,10 @@ function markdownReport(reports, commit, options) {
         showMissing ? "Missing" : undefined,
       ],
       [
-        "**All files**",
-        `\`${total}%\``,
-        showLine ? `\`${linesTotal}%\`` : undefined,
-        showBranch ? `\`${branchTotal}%\`` : undefined,
+        "<strong>All files</strong>",
+        `<code>${total}%</code>`,
+        showLine ? `<code>${linesTotal}%</code>` : undefined,
+        showBranch ? `<code>${branchTotal}%</code>` : undefined,
         status(total),
         showMissing ? " " : undefined,
       ],
@@ -244,14 +255,15 @@ function markdownReport(reports, commit, options) {
           // folder name row
           : `</tbody>\n<tbody>\n<tr><td colspan="10"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
       })
-      .join("\n");
-    const titleText = `<strong>${reportName}${folder}</strong>`;
-    output += `${titleText}\n\n<br/><table>\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
+      .join("\n")}\n</tbody>\n<table>`;
+    const titleText = `<strong>${reportName}${folder} - ${total}%</strong>`;
+    output += `${titleText}\n\n${table}\n\n`;
+    structuredOutput += `<details><summary>${titleText}</summary>\n\n${table}\n\n</details>\n\n`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
   output += `${minimumCoverageText}\n\n${footerText}`;
-  return output;
+  return [output, structuredOutput];
 }
 
 async function addComment(pullRequestNumber, body, reportName) {
@@ -259,9 +271,8 @@ async function addComment(pullRequestNumber, body, reportName) {
     issue_number: pullRequestNumber,
     ...github.context.repo,
   });
-  const commentFilter = reportName ? reportName : credits;
   const comment = comments.data.find((comment) =>
-    comment.body.includes(commentFilter)
+    comment.body.includes(reportName)
   );
   if (comment != null) {
     await client.rest.issues.updateComment({
@@ -278,16 +289,14 @@ async function addComment(pullRequestNumber, body, reportName) {
   }
 }
 
-async function addCheck(body, reportName, sha, conclusion) {
-  const checkName = reportName ? reportName : "coverage";
-
+async function addCheck(checkName, body, checkTitle, sha, conclusion) {
   await client.rest.checks.create({
     name: checkName,
     head_sha: sha,
     status: "completed",
     conclusion: conclusion,
     output: {
-      title: checkName,
+      title: checkTitle,
       summary: body,
     },
     ...github.context.repo,
