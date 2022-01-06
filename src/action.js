@@ -242,7 +242,7 @@ function markdownReport(reports, commit, options) {
             // file detail row
             : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
           // folder name row
-          : `</tbody>\n<tbody>\n<tr><td colspan="10" style="border:none;"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
+          : `</tbody>\n<tbody>\n<tr><td colspan="10"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n");
     const titleText = `<strong>${reportName}${folder}</strong>`;
