@@ -215,14 +215,6 @@ function markdownReport(reports, commit, options) {
         showMissing ? "Missing" : undefined,
       ],
       [
-        "-",
-        ":-:",
-        showLine ? ":-:" : undefined,
-        showBranch ? ":-:" : undefined,
-        ":-:",
-        showMissing ? ":-:" : undefined,
-      ],
-      [
         "**All files**",
         `\`${total}%\``,
         showLine ? `\`${linesTotal}%\`` : undefined,
@@ -232,12 +224,16 @@ function markdownReport(reports, commit, options) {
       ],
       ...files,
     ]
-      .map((row) => {
-        return `| ${row.filter(Boolean).join(" | ")} |`;
+      .map((row, index) => {
+        return index === 0
+          // heading row
+          ? `<tr><th>${row.filter(Boolean).join('</th><th>')}</th></tr>`
+          // file detail row
+          : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`;
       })
       .join("\n");
     const titleText = `<strong>${reportName}${folder}</strong>`;
-    output += `${titleText}\n\n${table}\n\n`;
+    output += `${titleText}\n\n<table>\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
