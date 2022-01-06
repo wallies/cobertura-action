@@ -111,7 +111,7 @@ function formatFileUrl(sourceDir, fileName, commit) {
 }
 
 function formatRangeText([start, end]) {
-  return `${start}` + (start === end ? "" : `-${end}`);
+  return `${start}` + (start === end ? "" : `-&NoBreak;${end}`);
 }
 
 function tickWrap(string) {
@@ -131,7 +131,7 @@ function cropRangeList(separator, showMissingMaxLength, ranges) {
 }
 
 function linkRange(fileUrl, range) {
-  const [start, end] = range.slice(1, -1).split("-", 2);
+  const [start, end] = range.split('&NoBreak;').join().slice(1, -1).split("-", 2);
   const rangeReference = `L${start}` + (end ? `-L${end}` : "");
   // Insert plain=1 to disabled rendered views.
   const url = `${fileUrl}?plain=1#${rangeReference}`;
