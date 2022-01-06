@@ -242,11 +242,11 @@ function markdownReport(reports, commit, options) {
             // file detail row
             : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
           // folder name row
-          : `</tbody>\n<tbody>\n<tr><td colspan="10" style="border:none;margin-top:2em;">${row}</td></tr>\n</tbody>\n<tbody>`;
+          : `</tbody>\n<tbody>\n<tr><td colspan="10" style="border:none;"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n");
     const titleText = `<strong>${reportName}${folder}</strong>`;
-    output += `${titleText}\n\n<table style="margin-top:2em;">\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
+    output += `${titleText}\n\n<br/><table>\n<tbody>\n${table}\n</tbody>\n<table>\n\n`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
