@@ -115,7 +115,7 @@ function formatRangeText([start, end]) {
 }
 
 function tickWrap(string) {
-  return `<code style="white-space: nowrap;">${string}</code>`;
+  return "`" + string + "`";
 }
 
 function cropRangeList(separator, showMissingMaxLength, ranges) {
