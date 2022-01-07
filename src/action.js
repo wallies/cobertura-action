@@ -114,8 +114,8 @@ function formatRangeText([start, end]) {
   return `${start}` + (start === end ? "" : `-&NoBreak;${end}`);
 }
 
-function tickWrap(string) {
-  return "`" + string + "`";
+function codeWrap(string) {
+  return "<code>" + string + "</code>";
 }
 
 function cropRangeList(separator, showMissingMaxLength, ranges) {
@@ -153,8 +153,8 @@ function formatMissingLines(
     formatted
   );
   const linked = showMissingLineLinks
-    ? cropped.map((range) => `[${tickWrap(range)}](${getRangeURL(fileUrl, range)})`)
-    : cropped.map(tickWrap);
+    ? cropped.map((range) => `[${codeWrap(range)}](${getRangeURL(fileUrl, range)})`)
+    : cropped.map(codeWrap);
   const joined = linked.join(separator) + (isCropped ? " &hellip;" : "");
   return joined || " ";
 }
