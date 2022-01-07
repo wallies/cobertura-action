@@ -208,13 +208,13 @@ function markdownReport(reports, commit, options) {
         showLine ? `<code>${fileLines}%</code>` : undefined,
         showBranch ? `<code>${fileBranch}%</code>` : undefined,
         status(fileTotal),
-        showMissing && file.missing
-          ? formatMissingLines(
+        showMissing
+          ? file.missing ? formatMissingLines(
               formatFileUrl(linkMissingLinesSourceDir, file.filename, commit),
               file.missing,
               showMissingMaxLength,
               linkMissingLines
-            )
+            ) : " "
           : undefined,
       ]);
     }
