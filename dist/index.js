@@ -18291,6 +18291,12 @@ function getRangeURL(fileUrl, range) {
   return `${fileUrl}?plain=1#${rangeReference}`;
 }
 
+function linkRange(fileUrl, range) {
+  const url = getRangeURL(fileUrl, range);
+  const text = codeWrap(range);
+  return `<a href="${url}" title="${range}">${text}</a>`
+}
+
 function formatMissingLines(
   fileUrl,
   lineRanges,
@@ -18307,7 +18313,7 @@ function formatMissingLines(
     formatted
   );
   const linked = showMissingLineLinks
-    ? cropped.map((range) => `[${codeWrap(range)}](${getRangeURL(fileUrl, range)})`)
+    ? cropped.map((range) => linkRange(fileUrl, range))
     : cropped.map(codeWrap);
   const joined = linked.join(separator) + (isCropped ? " &hellip;" : "");
   return joined || " ";
