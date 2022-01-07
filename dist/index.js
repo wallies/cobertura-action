@@ -18350,6 +18350,8 @@ function markdownReport(reports, commit, options) {
       const fileNameParts = file.filename.split('/');
       const fileName = fileNameParts.pop();
       const fileFolder = fileNameParts.join('/');
+      const fileURL = linkMissingLines ? formatFileUrl(linkMissingLinesSourceDir, file.filename, commit) : '';
+      const fileLink = linkMissingLines ? `<a href="${fileURL}" title="${file.filename}>${fileName}</a>` : '';
       // add unique folder names as rows
       if (!showClassNames && (fileFolder !== previousFileFolder)) {
         files.push(fileFolder);
@@ -18357,18 +18359,18 @@ function markdownReport(reports, commit, options) {
       }
       // add file details as row
       files.push([
-        showClassNames ? file.name : fileName,
+        showClassNames ? file.name : linkMissingLines ? fileLink : fileName,
         `<code>${fileTotal}%</code>`,
         showLine ? `<code>${fileLines}%</code>` : undefined,
         showBranch ? `<code>${fileBranch}%</code>` : undefined,
         status(fileTotal),
-        showMissing && file.missing
-          ? formatMissingLines(
-              formatFileUrl(linkMissingLinesSourceDir, file.filename, commit),
+        showMissing
+          ? file.missing ? formatMissingLines(
+              fileURL,
               file.missing,
               showMissingMaxLength,
               linkMissingLines
-            )
+            ) : " "
           : undefined,
       ]);
     }
@@ -18414,7 +18416,7 @@ function markdownReport(reports, commit, options) {
             // file detail row
             : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
           // folder name row
-          : `</tbody>\n<tbody>\n<tr><td colspan="10"><br/>${row}</td></tr>\n</tbody>\n<tbody>`;
+          : `</tbody>\n<tbody>\n<tr><td colspan="10"><h4>${row}</h4></td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n")}\n</tbody>\n</table>`;
 
