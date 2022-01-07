@@ -130,12 +130,11 @@ function cropRangeList(separator, showMissingMaxLength, ranges) {
   return [ranges, false];
 }
 
-function linkRange(fileUrl, range) {
-  const [start, end] = range.split('&NoBreak;').join().slice(1, -1).split("-", 2);
+function getRangeURL(fileUrl, range) {
+  const [start, end] = range.split("-", 2);
   const rangeReference = `L${start}` + (end ? `-L${end}` : "");
   // Insert plain=1 to disabled rendered views.
-  const url = `${fileUrl}?plain=1#${rangeReference}`;
-  return `[${range}](${url})`;
+  return `${fileUrl}?plain=1#${rangeReference}`;
 }
 
 function formatMissingLines(
@@ -153,10 +152,9 @@ function formatMissingLines(
     showMissingMaxLength,
     formatted
   );
-  const wrapped = cropped.map(tickWrap);
   const linked = showMissingLineLinks
-    ? wrapped.map((range) => linkRange(fileUrl, range))
-    : wrapped;
+    ? cropped.map((range) => `[${tickWrap(range)}](${getRangeURL(fileUrl, range)})`)
+    : cropped.map(tickWrap);
   const joined = linked.join(separator) + (isCropped ? " &hellip;" : "");
   return joined || " ";
 }
