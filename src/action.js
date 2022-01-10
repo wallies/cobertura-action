@@ -111,11 +111,11 @@ function formatFileUrl(sourceDir, fileName, commit) {
 }
 
 function formatRangeText([start, end]) {
-  return `${start}` + (start === end ? "" : `-&NoBreak;${end}`);
+  return `${start}` + (start === end ? "" : `-${end}`);
 }
 
-function codeWrap(string) {
-  return "<code>" + string + "</code>";
+function codeWrapRange(string) {
+  return "<code>" + `${string}`.replace('-', '-&NoBreak;') + "</code>";
 }
 
 function cropRangeList(separator, showMissingMaxLength, ranges) {
@@ -139,7 +139,7 @@ function getRangeURL(fileUrl, range) {
 
 function linkRange(fileUrl, range) {
   const url = getRangeURL(fileUrl, range);
-  const text = codeWrap(range);
+  const text = codeWrapRange(range);
   return `<a href="${url}" title="${range}">${text}</a>`
 }
 
@@ -160,7 +160,7 @@ function formatMissingLines(
   );
   const linked = showMissingLineLinks
     ? cropped.map((range) => linkRange(fileUrl, range))
-    : cropped.map(codeWrap);
+    : cropped.map((range) => codeWrapRange(range));
   const joined = linked.join(separator) + (isCropped ? " &hellip;" : "");
   return joined || " ";
 }
