@@ -18351,7 +18351,7 @@ function markdownReport(reports, commit, options) {
       const fileName = fileNameParts.pop();
       const fileFolder = fileNameParts.join('/');
       const fileURL = linkMissingLines ? formatFileUrl(linkMissingLinesSourceDir, file.filename, commit) : '';
-      const fileLink = linkMissingLines ? `<a href="${fileURL}" title="${file.filename}>${fileName}</a>` : '';
+      const fileLink = linkMissingLines ? `<a href="${fileURL}" title="${file.filename}">${fileName}</a>` : '';
       // add unique folder names as rows
       if (!showClassNames && (fileFolder !== previousFileFolder)) {
         files.push(fileFolder);
