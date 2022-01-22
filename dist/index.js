@@ -18227,6 +18227,7 @@ async function action(payload) {
     linkMissingLinesSourceDir,
     filteredFiles: changedFiles,
     reportName,
+    checkName,
   });
 
   const belowThreshold = reports.some(
@@ -18241,7 +18242,7 @@ async function action(payload) {
   }
   if (pullRequestNumber && pullRequestComment) {
     try {
-      await addComment(pullRequestNumber, comment, reportName);
+      await addComment(pullRequestNumber, comment, checkName);
     } catch (error) {
       core.error(`❌ Failed to add pull request comment. (${error})`);
     }
@@ -18338,6 +18339,7 @@ function markdownReport(reports, commit, options) {
     linkMissingLinesSourceDir = null,
     filteredFiles = null,
     reportName = "Coverage Report",
+    checkName = "coverage",
   } = options || {};
   const status = (total) =>
     total >= minimumCoverage ? ":white_check_mark:" : ":x:";
@@ -18418,6 +18420,7 @@ function markdownReport(reports, commit, options) {
     const titleText = `<strong>${reportName}${folder} - ${total}%</strong>`;
     output += `${titleText}\n\n${table}\n\n`;
     structuredOutput += `<details><summary>${titleText}</summary>\n\n${table}\n\n</details>\n\n`;
+    structuredOutput += `[//]: # (cobertura-action: ${checkName})`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} against ${commit} </p>`;
@@ -18425,13 +18428,13 @@ function markdownReport(reports, commit, options) {
   return [output, structuredOutput];
 }
 
-async function addComment(pullRequestNumber, body, reportName) {
+async function addComment(pullRequestNumber, body, checkName) {
   const comments = await client.rest.issues.listComments({
     issue_number: pullRequestNumber,
     ...github.context.repo,
   });
   const comment = comments.data.find((comment) =>
-    comment.body.includes(reportName)
+    comment.body.includes(`cobertura-action: ${checkName}`)
   );
   if (comment != null) {
     await client.rest.issues.updateComment({
