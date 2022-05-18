@@ -115,7 +115,7 @@ function formatRangeText([start, end]) {
 }
 
 function codeWrapRange(string) {
-  return "<code>" + `${string}`.replace('-', '-&NoBreak;') + "</code>";
+  return "<code>" + `${string}`.replace("-", "-&NoBreak;") + "</code>";
 }
 
 function cropRangeList(separator, showMissingMaxLength, ranges) {
@@ -140,7 +140,7 @@ function getRangeURL(fileUrl, range) {
 function linkRange(fileUrl, range) {
   const url = getRangeURL(fileUrl, range);
   const text = codeWrapRange(range);
-  return `<a href="${url}" title="${range}">${text}</a>`
+  return `<a href="${url}" title="${range}">${text}</a>`;
 }
 
 function formatMissingLines(
@@ -193,13 +193,17 @@ function markdownReport(reports, commit, options) {
       const fileTotal = Math.floor(file.total);
       const fileLines = Math.floor(file.line);
       const fileBranch = Math.floor(file.branch);
-      const fileNameParts = file.filename.split('/');
+      const fileNameParts = file.filename.split("/");
       const fileName = fileNameParts.pop();
-      const fileFolder = fileNameParts.join('/');
-      const fileURL = linkMissingLines ? formatFileUrl(linkMissingLinesSourceDir, file.filename, commit) : '';
-      const fileLink = linkMissingLines ? `<a href="${fileURL}" title="${file.filename}">${fileName}</a>` : '';
+      const fileFolder = fileNameParts.join("/");
+      const fileURL = linkMissingLines
+        ? formatFileUrl(linkMissingLinesSourceDir, file.filename, commit)
+        : "";
+      const fileLink = linkMissingLines
+        ? `<a href="${fileURL}" title="${file.filename}">${fileName}</a>`
+        : "";
       // add unique folder names as rows
-      if (!showClassNames && (fileFolder !== previousFileFolder)) {
+      if (!showClassNames && fileFolder !== previousFileFolder) {
         files.push(fileFolder);
         previousFileFolder = fileFolder;
       }
@@ -211,12 +215,14 @@ function markdownReport(reports, commit, options) {
         showBranch ? `<code>${fileBranch}%</code>` : undefined,
         status(fileTotal),
         showMissing
-          ? file.missing ? formatMissingLines(
-              fileURL,
-              file.missing,
-              showMissingMaxLength,
-              linkMissingLines
-            ) : " "
+          ? file.missing
+            ? formatMissingLines(
+                fileURL,
+                file.missing,
+                showMissingMaxLength,
+                linkMissingLines
+              )
+            : " "
           : undefined,
       ]);
     }
@@ -257,12 +263,14 @@ function markdownReport(reports, commit, options) {
       .map((row, index) => {
         return Array.isArray(row)
           ? index === 0
-            // heading row
-            ? `<tr><th>${row.filter(Boolean).join('</th><th>')}</th></tr>`
-            // file detail row
-            : `<tr><td>${row.filter(Boolean).join('</td><td align="center">')}</td></tr>`
-          // folder name row
-          : `</tbody>\n<tbody>\n<tr><td colspan="10"><h4>${row}</h4></td></tr>\n</tbody>\n<tbody>`;
+            ? // heading row
+              `<tr><th>${row.filter(Boolean).join("</th><th>")}</th></tr>`
+            : // file detail row
+              `<tr><td>${row
+                .filter(Boolean)
+                .join('</td><td align="center">')}</td></tr>`
+          : // folder name row
+            `</tbody>\n<tbody>\n<tr><td colspan="10"><h4>${row}</h4></td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n")}\n</tbody>\n</table>`;
 
