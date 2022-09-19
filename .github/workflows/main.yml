@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/checkout@d171c3b028d844f2bf14e9fdec0c58114451e4bf
 
-      - uses: actions/setup-node@1f8c6b94b26d0feae1e387ca63ccbdc44d27b561
+      - uses: actions/setup-node@2fddd8803e2f5c9604345a0b591c3020ee971a93
         with:
           node-version: ${{ matrix.node-version }}
 
