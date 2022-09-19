@@ -5,6 +5,10 @@ on:
     workflows: [ "Test" ]
     types:
       - completed
+
+permissions:  # added using https://github.com/step-security/secure-workflows
+  contents: read
+
 jobs:
   coverage:
     runs-on: ubuntu-latest
@@ -14,12 +18,16 @@ jobs:
       - name: Harden Runner
         uses: step-security/harden-runner@dd2c410b088af7c0dc8046f3ac9a8f4148492a95
         with:
-          egress-policy: audit # TODO: change to 'egress-policy: block' after couple of runs
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
 
       - uses: actions/checkout@d171c3b028d844f2bf14e9fdec0c58114451e4bf
         with:
           fetch-depth: 0
           ref: ${{ github.event.workflow_run.head_commit.id }}
+
       - name: Download Coverage Artifacts
         uses: dawidd6/action-download-artifact@891cccee4b25d3306cf5edafa174ddc1d969871f
         with:
@@ -28,10 +36,10 @@ jobs:
           commit: ${{ github.event.workflow_run.head_commit.id }}
           name: coverage
           path: coverage
+
       - name: Produce Coverage report
         uses: ./
         with:
           path: coverage/cobertura-coverage.xml
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
           minimum_coverage: 75
           fail_below_threshold: true
