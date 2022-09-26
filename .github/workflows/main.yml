@@ -4,10 +4,10 @@ on:
   pull_request:
     types: [ opened, synchronize, reopened ]
     branches:
-      - master
+      - main
   push:
     branches:
-      - master
+      - main
 
 permissions:  # added using https://github.com/step-security/secure-workflows
   contents: read
