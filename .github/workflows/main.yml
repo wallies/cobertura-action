@@ -14,12 +14,16 @@ permissions:  # added using https://github.com/step-security/secure-workflows
 
 jobs:
   test:
+    permissions:
+      contents: read
+      pull-requests: 'write'
+      checks: 'write'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        node-version: ['18.x']
+        node-version: ['20.x']
 
     steps:
       - name: Harden Runner
@@ -29,6 +33,7 @@ jobs:
           allowed-endpoints: >
             github.com:443
             registry.npmjs.org:443
+            api.github.com:443
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
