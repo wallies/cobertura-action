@@ -854,7 +854,7 @@ test("addCheck", async () => {
   nock.cleanAll();
 
   // Additional delay, if needed
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   expect(checkRunMock.pendingMocks().length).toBe(0);
 });
