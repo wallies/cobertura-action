@@ -73,6 +73,7 @@ async function action(payload) {
     linkMissingLinesSourceDir,
     filteredFiles: changedFiles,
     reportName,
+    checkName,
   });
 
   const belowThreshold = reports.some(
@@ -86,15 +87,26 @@ async function action(payload) {
     reportTitle = `Coverage: ${_actual}% (actual) ${_sign} ${minimumCoverage}% (expected)`;
   }
   if (pullRequestNumber && pullRequestComment) {
-    await addComment(pullRequestNumber, comment, reportName);
+    try {
+      await addComment(pullRequestNumber, comment, checkName);
+    } catch (error) {
+      core.error(`❌ Failed to add pull request comment. (${error})`);
+    }
   }
-  await addCheck(
-    checkName,
-    checkBody,
-    reportTitle,
-    commit,
-    failBelowThreshold ? (belowThreshold ? "failure" : "success") : "neutral"
-  );
+
+  try {
+    await addCheck(
+      checkName,
+      checkBody,
+      reportTitle,
+      commit,
+      failBelowThreshold ? (belowThreshold ? "failure" : "success") : "neutral"
+    );
+  } catch (error) {
+    core.error(
+      `❌ Failed to create checks using the provided token. (${error})`
+    );
+  }
 
   if (failBelowThreshold && belowThreshold) {
     core.setFailed("Minimum coverage requirement was not satisfied");
@@ -177,6 +189,7 @@ function markdownReport(reports, commit, options) {
     linkMissingLinesSourceDir = null,
     filteredFiles = null,
     reportName = "Coverage Report",
+    checkName = "coverage",
   } = options || {};
   const status = (total) =>
     total >= minimumCoverage ? ":white_check_mark:" : ":x:";
@@ -273,10 +286,10 @@ function markdownReport(reports, commit, options) {
             `</tbody>\n<tbody>\n<tr><td colspan="10"><h4>${row}</h4></td></tr>\n</tbody>\n<tbody>`;
       })
       .join("\n")}\n</tbody>\n</table>`;
-
     const titleText = `<strong>${reportName}${folder} - ${total}%</strong>`;
     output += `${titleText}\n\n${table}\n\n`;
     structuredOutput += `<details><summary>${titleText}</summary>\n\n${table}\n\n</details>\n\n`;
+    structuredOutput += `[//]: # (cobertura-action: ${checkName})`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
   const footerText = `<p align="right">${credits} </p>`;
@@ -284,13 +297,13 @@ function markdownReport(reports, commit, options) {
   return [output, structuredOutput];
 }
 
-async function addComment(pullRequestNumber, body, reportName) {
+async function addComment(pullRequestNumber, body, checkName) {
   const comments = await client.rest.issues.listComments({
     issue_number: pullRequestNumber,
     ...github.context.repo,
   });
   const comment = comments.data.find((comment) =>
-    comment.body.includes(reportName)
+    comment.body.includes(`cobertura-action: ${checkName}`)
   );
   if (comment != null) {
     await client.rest.issues.updateComment({

@@ -66,7 +66,7 @@ test("action", async () => {
     .post(`/repos/${owner}/${repo}/check-runs`)
     .reply(200);
   await action({
-    pull_request: { number: prNumber, head: { sha: "deadbeef" } },
+    pull_request: { number: prNumber, head: { sha: "" } },
   });
   await action();
 });
@@ -92,14 +92,14 @@ test("action triggered by workflow event", async () => {
       {
         number: 1,
         head: {
-          sha: "deadbeef",
+          sha: "",
         },
       },
     ])
     .post(`/repos/${owner}/${repo}/check-runs`)
     .reply(200);
   await action({
-    workflow_run: { head_commit: { id: "deadbeef" } },
+    workflow_run: { head_commit: { id: "" } },
   });
 });
 
@@ -116,7 +116,7 @@ test("action triggered by push", async () => {
 
   const body = {
     name: "coverage",
-    head_sha: "deadbeef",
+    head_sha: "",
     status: "completed",
     conclusion: "failure",
     output: {
@@ -849,6 +849,12 @@ test("addCheck", async () => {
     .reply(200);
 
   await addCheck("foo", "bar", "fake_sha", "success");
+
+  // Clean up nock mocks after addCheck has completed
+  nock.cleanAll();
+
+  // Additional delay, if needed
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   expect(checkRunMock.pendingMocks().length).toBe(0);
 });
