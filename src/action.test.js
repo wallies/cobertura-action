@@ -56,6 +56,7 @@ test("action", async () => {
   process.env["INPUT_SHOW_MISSING"] = "false";
   process.env["INPUT_ONLY_CHANGED_FILES"] = "false";
   process.env["INPUT_PULL_REQUEST_NUMBER"] = "";
+  process.env["INPUT_PULL_REQUEST_COMMENT"] = "true";
   const prNumber = 1;
   nock("https://api.github.com")
     .post(`/repos/${owner}/${repo}/issues/${prNumber}/comments`)
@@ -65,7 +66,7 @@ test("action", async () => {
     .post(`/repos/${owner}/${repo}/check-runs`)
     .reply(200);
   await action({
-    pull_request: { number: prNumber, head: { sha: "deadbeef" } },
+    pull_request: { number: prNumber, head: { sha: "" } },
   });
   await action();
 });
@@ -91,14 +92,14 @@ test("action triggered by workflow event", async () => {
       {
         number: 1,
         head: {
-          sha: "deadbeef",
+          sha: "",
         },
       },
     ])
     .post(`/repos/${owner}/${repo}/check-runs`)
     .reply(200);
   await action({
-    workflow_run: { head_commit: { id: "deadbeef" } },
+    workflow_run: { head_commit: { id: "" } },
   });
 });
 
@@ -115,7 +116,7 @@ test("action triggered by push", async () => {
 
   const body = {
     name: "coverage",
-    head_sha: "deadbeef",
+    head_sha: "",
     status: "completed",
     conclusion: "failure",
     output: {
@@ -128,7 +129,7 @@ test("action triggered by push", async () => {
     .post(`/repos/${owner}/${repo}/check-runs`, body)
     .reply(200);
   await action({
-    after: "deadbeef",
+    after: "",
   });
 });
 
@@ -334,12 +335,21 @@ test("markdownReport", () => {
     })[0]
   ).toBe(`<strong>${reportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :white_check_mark: |
-| \\_\\_init\\_\\_.py | \`80%\` | :white_check_mark: |
-| bar.py | \`75%\` | :white_check_mark: |
-| foo.py | \`75%\` | :white_check_mark: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -348,12 +358,21 @@ _Minimum allowed coverage is \`70%\`_
   expect(markdownReport([dummyReport], commit)[0])
     .toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
-| \\_\\_init\\_\\_.py | \`80%\` | :x: |
-| bar.py | \`75%\` | :x: |
-| foo.py | \`75%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center">:x:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -366,12 +385,21 @@ _Minimum allowed coverage is \`100%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage | Lines |   |
-| - | :-: | :-: | :-: |
-| **All files** | \`77%\` | \`77%\` | :white_check_mark: |
-| \\_\\_init\\_\\_.py | \`80%\` | \`80%\` | :white_check_mark: |
-| bar.py | \`75%\` | \`80%\` | :white_check_mark: |
-| foo.py | \`75%\` | \`100%\` | :white_check_mark: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th>Lines</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center"><code>77%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center"><code>80%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center"><code>80%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center"><code>100%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -384,12 +412,21 @@ _Minimum allowed coverage is \`70%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage | Branches |   |
-| - | :-: | :-: | :-: |
-| **All files** | \`77%\` | \`0%\` | :white_check_mark: |
-| \\_\\_init\\_\\_.py | \`80%\` | \`0%\` | :white_check_mark: |
-| bar.py | \`75%\` | \`0%\` | :white_check_mark: |
-| foo.py | \`75%\` | \`75%\` | :white_check_mark: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th>Branches</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -403,12 +440,21 @@ _Minimum allowed coverage is \`70%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage | Lines | Branches |   |
-| - | :-: | :-: | :-: | :-: |
-| **All files** | \`77%\` | \`77%\` | \`0%\` | :white_check_mark: |
-| \\_\\_init\\_\\_.py | \`80%\` | \`80%\` | \`0%\` | :white_check_mark: |
-| bar.py | \`75%\` | \`80%\` | \`0%\` | :white_check_mark: |
-| foo.py | \`75%\` | \`100%\` | \`75%\` | :white_check_mark: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th>Lines</th><th>Branches</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center"><code>77%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center"><code>100%</code></td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -423,12 +469,21 @@ _Minimum allowed coverage is \`70%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage | Lines | Branches |   | Missing |
-| - | :-: | :-: | :-: | :-: | :-: |
-| **All files** | \`77%\` | \`77%\` | \`0%\` | :white_check_mark: |   |
-| \\_\\_init\\_\\_.py | \`80%\` | \`80%\` | \`0%\` | :white_check_mark: | \`24-26\` |
-| bar.py | \`75%\` | \`80%\` | \`0%\` | :white_check_mark: | \`23-24\` \`39-40\` \`50\` |
-| foo.py | \`75%\` | \`100%\` | \`75%\` | :white_check_mark: |   |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th>Lines</th><th>Branches</th><th> </th><th>Missing</th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center"><code>77%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"> </td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"><code>24-&NoBreak;26</code></td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"><code>23-&NoBreak;24</code> <code>39-&NoBreak;40</code> <code>50</code></td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center"><code>100%</code></td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td><td align="center"> </td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -444,12 +499,21 @@ _Minimum allowed coverage is \`70%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage | Lines | Branches |   | Missing |
-| - | :-: | :-: | :-: | :-: | :-: |
-| **All files** | \`77%\` | \`77%\` | \`0%\` | :white_check_mark: |   |
-| \\_\\_init\\_\\_.py | \`80%\` | \`80%\` | \`0%\` | :white_check_mark: | \`24-26\` |
-| bar.py | \`75%\` | \`80%\` | \`0%\` | :white_check_mark: | \`23-24\` &hellip; |
-| foo.py | \`75%\` | \`100%\` | \`75%\` | :white_check_mark: |   |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th>Lines</th><th>Branches</th><th> </th><th>Missing</th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center"><code>77%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"> </td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"><code>24-&NoBreak;26</code></td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center"><code>80%</code></td><td align="center"><code>0%</code></td><td align="center">:white_check_mark:</td><td align="center"><code>23-&NoBreak;24</code> &hellip;</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center"><code>100%</code></td><td align="center"><code>75%</code></td><td align="center">:white_check_mark:</td><td align="center"> </td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`70%\`_
 
@@ -458,12 +522,21 @@ _Minimum allowed coverage is \`70%\`_
   expect(markdownReport([dummyReport], commit, { minimumCoverage: 80 })[0])
     .toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
-| \\_\\_init\\_\\_.py | \`80%\` | :white_check_mark: |
-| bar.py | \`75%\` | :x: |
-| foo.py | \`75%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>__init__.py</td><td align="center"><code>80%</code></td><td align="center">:white_check_mark:</td></tr>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+<tr><td>foo.py</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`80%\`_
 
@@ -472,12 +545,16 @@ _Minimum allowed coverage is \`80%\`_
   expect(markdownReport([dummyReport], commit, { showClassNames: true })[0])
     .toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
-| ClassFoo | \`80%\` | :x: |
-| ClassBar | \`75%\` | :x: |
-| ClassMoo | \`75%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+<tr><td>ClassFoo</td><td align="center"><code>80%</code></td><td align="center">:x:</td></tr>
+<tr><td>ClassBar</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+<tr><td>ClassMoo</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -487,10 +564,19 @@ _Minimum allowed coverage is \`100%\`_
     markdownReport([dummyReport], commit, { filteredFiles: ["bar.py"] })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
-| bar.py | \`75%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td>bar.py</td><td align="center"><code>75%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -500,9 +586,13 @@ _Minimum allowed coverage is \`100%\`_
     markdownReport([dummyReport], commit, { filteredFiles: ["README.md"] })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -511,9 +601,13 @@ _Minimum allowed coverage is \`100%\`_
   expect(markdownReport([dummyReport], commit, { filteredFiles: [] })[0])
     .toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -536,15 +630,23 @@ _Minimum allowed coverage is \`100%\`_
     )[0]
   ).toBe(`<strong>${defaultReportName} foo.xml - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 <strong>${defaultReportName} bar.xml - 77%</strong>
 
-| File | Coverage |   |
-| - | :-: | :-: |
-| **All files** | \`77%\` | :x: |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -558,12 +660,21 @@ _Minimum allowed coverage is \`100%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   | Missing |
-| - | :-: | :-: | :-: |
-| **All files** | \`77%\` | :x: |   |
-| \\_\\_init\\_\\_.py | \`80%\` | :x: | [\`24-26\`](https://github.com/someowner/somerepo/blob/deadbeef/__init__.py?plain=1#L24-L26) |
-| bar.py | \`75%\` | :x: | [\`23-24\`](https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L23-L24) [\`39-40\`](https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L39-L40) [\`50\`](https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L50) |
-| foo.py | \`75%\` | :x: |   |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th><th>Missing</th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/__init__.py" title="__init__.py">__init__.py</a></td><td align="center"><code>80%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/__init__.py?plain=1#L24-L26" title="24-26"><code>24-&NoBreak;26</code></a></td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py" title="bar.py">bar.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L23-L24" title="23-24"><code>23-&NoBreak;24</code></a> <a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L39-L40" title="39-40"><code>39-&NoBreak;40</code></a> <a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L50" title="50"><code>50</code></a></td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/foo.py" title="foo.py">foo.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -578,12 +689,21 @@ _Minimum allowed coverage is \`100%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   | Missing |
-| - | :-: | :-: | :-: |
-| **All files** | \`77%\` | :x: |   |
-| \\_\\_init\\_\\_.py | \`80%\` | :x: | [\`24-26\`](https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/__init__.py?plain=1#L24-L26) |
-| bar.py | \`75%\` | :x: | [\`23-24\`](https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L23-L24) [\`39-40\`](https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L39-L40) [\`50\`](https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L50) |
-| foo.py | \`75%\` | :x: |   |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th><th>Missing</th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/__init__.py" title="__init__.py">__init__.py</a></td><td align="center"><code>80%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/__init__.py?plain=1#L24-L26" title="24-26"><code>24-&NoBreak;26</code></a></td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py" title="bar.py">bar.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L23-L24" title="23-24"><code>23-&NoBreak;24</code></a> <a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L39-L40" title="39-40"><code>39-&NoBreak;40</code></a> <a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/bar.py?plain=1#L50" title="50"><code>50</code></a></td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/path/to/src/foo.py" title="foo.py">foo.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -597,12 +717,21 @@ _Minimum allowed coverage is \`100%\`_
     })[0]
   ).toBe(`<strong>${defaultReportName} - 77%</strong>
 
-| File | Coverage |   | Missing |
-| - | :-: | :-: | :-: |
-| **All files** | \`77%\` | :x: |   |
-| \\_\\_init\\_\\_.py | \`80%\` | :x: | [\`24-26\`](https://github.com/someowner/somerepo/blob/deadbeef/__init__.py?plain=1#L24-L26) |
-| bar.py | \`75%\` | :x: | [\`23-24\`](https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L23-L24) [\`39-40\`](https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L39-L40) &hellip; |
-| foo.py | \`75%\` | :x: |   |
+<br/>
+<table>
+<tbody>
+<tr><th>File</th><th>Coverage</th><th> </th><th>Missing</th></tr>
+<tr><td><strong>All files</strong></td><td align="center"><code>77%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+<tbody>
+<tr><td colspan="10"><h4></h4></td></tr>
+</tbody>
+<tbody>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/__init__.py" title="__init__.py">__init__.py</a></td><td align="center"><code>80%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/__init__.py?plain=1#L24-L26" title="24-26"><code>24-&NoBreak;26</code></a></td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py" title="bar.py">bar.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"><a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L23-L24" title="23-24"><code>23-&NoBreak;24</code></a> <a href="https://github.com/someowner/somerepo/blob/deadbeef/bar.py?plain=1#L39-L40" title="39-40"><code>39-&NoBreak;40</code></a> &hellip;</td></tr>
+<tr><td><a href="https://github.com/someowner/somerepo/blob/deadbeef/foo.py" title="foo.py">foo.py</a></td><td align="center"><code>75%</code></td><td align="center">:x:</td><td align="center"> </td></tr>
+</tbody>
+</table>
 
 _Minimum allowed coverage is \`100%\`_
 
@@ -720,6 +849,5 @@ test("addCheck", async () => {
     .reply(200);
 
   await addCheck("foo", "bar", "fake_sha", "success");
-
   expect(checkRunMock.pendingMocks().length).toBe(0);
 });

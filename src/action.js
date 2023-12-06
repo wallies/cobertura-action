@@ -292,7 +292,7 @@ function markdownReport(reports, commit, options) {
     structuredOutput += `[//]: # (cobertura-action: ${checkName})`;
   }
   const minimumCoverageText = `_Minimum allowed coverage is \`${minimumCoverage}%\`_`;
-  const footerText = `<p align="right">${credits} against ${commit} </p>`;
+  const footerText = `<p align="right">${credits} </p>`;
   output += `${minimumCoverageText}\n\n${footerText}`;
   return [output, structuredOutput];
 }
