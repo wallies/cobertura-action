@@ -849,5 +849,12 @@ test("addCheck", async () => {
     .reply(200);
 
   await addCheck("foo", "bar", "fake_sha", "success");
+
+  // Clean up nock mocks after addCheck has completed
+  nock.cleanAll();
+
+  // Additional delay, if needed
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   expect(checkRunMock.pendingMocks().length).toBe(0);
 });
